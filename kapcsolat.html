@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Üzenetküldés | Kézműves Keltető Műhely</title>
+<meta name="description" content="Írj üzenetet a kézműves tojáskeltető gépekkel kapcsolatban.">
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+
+  :root{
+    --bg-darker:   #10161a;
+    --bg-dark:     #1b2429;
+    --slate:       #2c3a42;
+    --slate-light: #435259;
+    --gray-100:    #f4f6f6;
+    --gray-200:    #e7ebec;
+    --gray-400:    #b7c1c5;
+    --gray-600:    #6c7a80;
+    --white:       #ffffff;
+    --turquoise:   #4fd6c4;
+    --turquoise-dk:#2a9d8f;
+    --amber:       #f5b942;
+    --error:       #ff6b6b;
+
+    --font-display: 'Fraunces', serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  body{
+    font-family: var(--font-body);
+    background:
+      radial-gradient(ellipse at 80% 0%, rgba(79,214,196,0.12), transparent 55%),
+      radial-gradient(ellipse at 10% 100%, rgba(245,185,66,0.08), transparent 50%),
+      var(--bg-darker);
+    color: var(--white);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 48px 20px;
+    line-height:1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a{ color:inherit; }
+
+  .wrap{
+    width:100%;
+    max-width: 640px;
+  }
+
+  .back-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:0.85rem;
+    color: var(--gray-400);
+    text-decoration:none;
+    margin-bottom:28px;
+    transition: color .2s ease;
+  }
+  .back-link:hover{ color: var(--turquoise); }
+
+  h1{
+    font-family: var(--font-display);
+    font-weight:600;
+    font-size: clamp(1.8rem, 4vw, 2.3rem);
+    margin-bottom:10px;
+  }
+
+  .lead{
+    color: var(--gray-400);
+    font-size:0.98rem;
+    max-width:480px;
+    margin-bottom:36px;
+  }
+
+  .context-chip{
+    display:none;
+    align-items:center;
+    gap:10px;
+    background: rgba(79,214,196,0.1);
+    border: 1px solid rgba(79,214,196,0.3);
+    color: var(--turquoise);
+    font-family: var(--font-mono);
+    font-size:0.82rem;
+    padding:10px 16px;
+    border-radius:999px;
+    margin-bottom:28px;
+    width:fit-content;
+  }
+  .context-chip.show{ display:flex; }
+
+  form{ display:flex; flex-direction:column; gap:18px; }
+
+  .field-row{
+    display:flex;
+    background: rgba(255,255,255,0.03);
+    border: 1.5px solid rgba(255,255,255,0.14);
+    border-radius: 16px;
+    overflow:hidden;
+  }
+  .field-row .field{
+    flex:1;
+    padding: 14px 18px;
+  }
+  .field-row .field + .field{
+    border-left: 1.5px solid rgba(255,255,255,0.12);
+  }
+
+  .field label{
+    display:block;
+    font-family: var(--font-mono);
+    font-size:0.68rem;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color: var(--gray-400);
+    margin-bottom:6px;
+  }
+  .field input,
+  .field textarea{
+    width:100%;
+    background:transparent;
+    border:none;
+    outline:none;
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size:0.98rem;
+  }
+  .field input::placeholder,
+  .field textarea::placeholder{ color: rgba(255,255,255,0.3); }
+
+  .message-box{
+    background: rgba(255,255,255,0.03);
+    border: 1.5px solid rgba(255,255,255,0.14);
+    border-radius: 20px;
+    padding: 20px 22px;
+  }
+  .message-box textarea{
+    width:100%;
+    min-height: 260px;
+    resize: vertical;
+    line-height:1.65;
+  }
+
+  .actions{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:15px;
+  }
+  
+  .send-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background: var(--turquoise);
+    color: var(--bg-darker);
+    border:none;
+    padding:14px 26px;
+    border-radius:999px;
+    font-weight:700;
+    font-size:0.94rem;
+    cursor:pointer;
+    transition: background .2s ease, transform .2s ease;
+  }
+  .send-btn:hover:not(:disabled){ background: var(--amber); transform: translateY(-2px); }
+  .send-btn:disabled{ opacity: 0.5; cursor: not-allowed; }
+
+  /* Formspree státusz üzenetek stílusai */
+  .status-wrapper {
+    font-size: 0.9rem;
+    font-weight: 500;
+    flex: 1;
+  }
+  [data-fs-success] { color: var(--turquoise); display: none; }
+  [data-fs-error] { color: var(--error); display: none; }
+  
+  /* Hibaüzenetek a mezőknél */
+  .field-error {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--error);
+    margin-top: 4px;
+  }
+
+  .note{
+    margin-top:22px;
+    font-size:0.8rem;
+    color: var(--gray-400);
+  }
+
+  @media (max-width:560px){
+    .field-row{ flex-direction:column; }
+    .field-row .field + .field{ border-left:none; border-top:1.5px solid rgba(255,255,255,0.12); }
+    .actions { flex-direction: column-reverse; align-items: flex-end; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <a href="index.html" class="back-link">← Vissza a főoldalra</a>
+
+  <div id="contextChip" class="context-chip">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 2"/></svg>
+    <span id="contextText"></span>
+  </div>
+
+  <h1>Írj üzenetet</h1>
+  <p class="lead">Töltsd ki az alábbi mezőket — az üzenetet közvetlenül a honlapról küldheted el, nem szükséges hozzá saját levelezőprogram.</p>
+
+  <form id="msgForm">
+    <input type="hidden" id="subjectField" name="_subject" value="Érdeklődés">
+
+    <div class="field-row">
+      <div class="field">
+        <label for="nameField">Neved</label>
+        <input type="text" id="nameField" name="Név" placeholder="Kovács János" data-fs-field required>
+        <span data-fs-error="Név" class="field-error"></span>
+      </div>
+      <div class="field">
+        <label for="contactField">E-mail vagy telefonszám</label>
+        <input type="text" id="contactField" name="Elérhetőség" placeholder="pelda@email.hu vagy +36 30 123 4567" data-fs-field required>
+        <span data-fs-error="Elérhetőség" class="field-error"></span>
+      </div>
+    </div>
+
+    <div class="message-box">
+      <div class="field">
+        <label for="messageField">Üzeneted</label>
+        <textarea id="messageField" name="Üzenet" data-fs-field required></textarea>
+        <span data-fs-error="Üzenet" class="field-error"></span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <div class="status-wrapper">
+        <div data-fs-success>Sikeres küldés! Köszönjük.</div>
+        <div data-fs-error>Hiba történt a küldés során. Kérjük, próbáld újra!</div>
+      </div>
+      <button type="submit" data-fs-submit-btn class="send-btn">
+        Üzenet küldése
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+  </form>
+
+  <p class="note">Az üzenet elküldése után közvetlenül a megadott elérhetőségedre fogunk válaszolni.</p>
+</div>
+
+<script>
+  // Dinamikus sablon kezelés az URL paraméterek alapján
+  const params = new URLSearchParams(window.location.search);
+  const termek = params.get('termek');
+  const ar = params.get('ar');
+  const messageField = document.getElementById('messageField');
+  const contextChip = document.getElementById('contextChip');
+  const contextText = document.getElementById('contextText');
+  const subjectField = document.getElementById('subjectField');
+
+  let template;
+  if (termek) {
+    contextText.textContent = ar ? `${termek} – ${ar}` : termek;
+    contextChip.classList.add('show');
+    subjectField.value = `Érdeklődés: ${termek}`;
+    template = `Kedves Zoli!\n\nÉrdeklődnék a(z) ${termek}${ar ? ' (' + ar + ')' : ''} tojáskeltető gép iránt.\n\n[Ide írhatod a további kérdéseidet: pl. mikorra tudnád vállalni a szállítást, van-e éppen raktáron, stb.]\n\nÜdvözlettel,`;
+  } else {
+    subjectField.value = 'Érdeklődés a tojáskeltető gépek iránt';
+    template = `Kedves Zoli!\n\nÉrdeklődnék a kézműves tojáskeltető gépeid iránt.\n\n[Ide írhatod a kérdéseidet]\n\nÜdvözlettel,`;
+  }
+  messageField.value = template;
+
+  // Formspree AJAX inicializálás az új ID-val
+  window.formspree = window.formspree || function () { (formspree.q = formspree.q || []).push(arguments); };
+  formspree('initForm', { formElement: '#msgForm', formId: 'mgojpjwb' });
+</script>
+<script src="https://unpkg.com/@formspree/ajax@1" defer></script>
+
+</body>
+</html>
